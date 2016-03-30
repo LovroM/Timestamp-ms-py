@@ -1,15 +1,17 @@
+import re
 from time import strftime, mktime
 from datetime import datetime, date
-import re
 
 from flask import Flask, render_template, jsonify
 
 app = Flask(__name__)
 
+# Simple home route that renders index.html
 @app.route("/")
 def index():
     return render_template("index.html")
 
+# Route that accepts date input.
 @app.route("/<ext_url>")
 def url_input(ext_url):
     
@@ -20,16 +22,18 @@ def url_input(ext_url):
         "July", "August", "September", "October", "November", "December"
     ]
     
+    # Unix input case. Like: "1450137600".
     if unix.match(ext_url):
-        #unix input case
+        
         unix_time = ext_url
         nat_time = datetime.fromtimestamp(float(ext_url)).strftime("%m %d, %Y")
         nat_time = nat_time.replace(nat_time[:2], month_names[int(nat_time[:2]) - 1])
         
-        return jsonify(unix = unix_time, natural = nat_time)
-        
+        return jsonify(unix=unix_time, natural=nat_time)
+    
+    # Natural time input case. Like: "December%15,%2015".   
     elif nat.match(ext_url):
-        #natural time input case
+       
         print ext_url
         date_list = ext_url.split()
         
@@ -40,13 +44,14 @@ def url_input(ext_url):
         start = date(int(year), int(month), int(day))
         unix_time = mktime(start.timetuple())
     
-        return jsonify(unix = unix_time, natural = date_list[0] + " " + str(day) + ", " + str(year) )
+        return jsonify(unix=unix_time, natural=date_list[0] + " " + str(day) + ", " + str(year))
         
+    # Wrong input date.    
     else:
-        return jsonify(unix = "null", natural = "null")
+        return jsonify(unix="null", natural="null")
 
 
-### Runs server
+# Runs server
 if __name__ == "__main__":
     app.debug = True
     app.run(host = "0.0.0.0", port = 8080)
